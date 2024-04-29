@@ -27,6 +27,10 @@ public class TileManger : MonoBehaviour
                 tiles[i].AddPiece(piecePairs[board.Squares[i]], board.Squares[i]);
             } 
         }
+
+        //  board.GenerateAllMoves(board.pieces[0], board.Squares); 
+
+
         // engine.PlayMove(board, board.Color); 
     }
 

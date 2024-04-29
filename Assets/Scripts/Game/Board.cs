@@ -118,13 +118,12 @@ namespace Chess {
             Dictionary<int, int> pinned = GameManager.GeneratePinnedPieces(KingPositions[offset], Color, Squares); 
             InitilizeCheck();
             foreach (int tile in pieces) {
-                possible[tile] = PossibleMoves(Squares[tile],tile, pinned);
-                
-                if (possible[tile].Count == 0) {
+                possible[tile] = OrderdPossibleMoves(tile, Squares, pinned,Squares[tile]);
+                if (possible[tile] == null) {
                     possible.Remove(tile);  
-                } else {
-                    // OrderMoves(tile, possible[tile], Squares); 
-                }
+                } 
+                // if (possible[tile].Count != 0) break;
+            
             }
             return possible; 
         }
@@ -137,22 +136,35 @@ namespace Chess {
             // Debug.Log(offset); 
         }
 
-        public void OrderMoves( int position, List<int> moves, int[] Squares) {
-            foreach (int square in moves) {
-                int moveScoreGuess = 0; 
-                int movePieceType = Piece.PieceType(Squares[position]); 
-                int capturePieceType = Piece.PieceType(Squares[position]);
+        public List<int> OrderdPossibleMoves( int position, int[] Squares, Dictionary<int, int> pinned, int piece) {
+            List<int> unorderedMoves = PossibleMoves(Squares[position], position, pinned);
+            if (unorderedMoves.Count == 0) {
+                return null;
+            }
+            return unorderedMoves; 
+         
+            var moveScoreTuples = new List<(int Move, int Score)>();
+            int moveScoreGuess;
+            int movePieceType ; 
+            int capturePieceType; 
+            foreach (int square in unorderedMoves) {
+                moveScoreGuess = 0; 
+                movePieceType = Piece.PieceType(Squares[position]); 
+                capturePieceType = Piece.PieceType(Squares[square]);
                 if (capturePieceType != Piece.None) {
                     moveScoreGuess = 10 * Computer.WorthFromType(capturePieceType) - Computer.WorthFromType(movePieceType); 
                 }
                 if (movePieceType == Piece.Pawn && GameManager.ends.Contains(square) ) {
+                    Debug.Log("test");
                     moveScoreGuess += Computer.WorthFromType(Computer.WorthFromType(7)); 
                 }
                 if (GameManager.IsAttackedByPawn(square, Piece.Colour(Squares[position]), Squares )) {
                     moveScoreGuess -= Computer.WorthFromType(movePieceType); 
                 }
+                
+                moveScoreTuples.Add((square, moveScoreGuess));
             }
-
+            return moveScoreTuples.OrderByDescending(t => t.Score).Select(t => t.Move).ToList();
         }
 
 

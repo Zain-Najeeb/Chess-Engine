@@ -338,13 +338,14 @@ namespace Chess {
             int direction =  colour == 8 ? 8: -8;  
             int right = (square + 1)%8 == 0 ? 0 : 1;
             int left = square % 8 == 0 ? 0 : 1;
+            if (square + direction < 0 || square + direction > 63) return false; 
             if (right == 1) { 
                 if (Piece.PieceType(Squares[square + direction + right]) == Piece.Pawn && !Piece.IsColour(Squares[square + direction + right], colour)) {
                     return true; 
                 }
             } 
-            if (right == 1) {
-                if (Piece.PieceType(Squares[square + direction + left]) == Piece.Pawn && !Piece.IsColour(Squares[square + direction + left], colour)) {
+            if (left == 1) {
+                if (Piece.PieceType(Squares[square + direction - left]) == Piece.Pawn && !Piece.IsColour(Squares[square + direction -left], colour)) {
                     return true; 
                 }
             }
