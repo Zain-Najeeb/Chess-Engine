@@ -12,7 +12,7 @@ namespace Chess {
     public static class GameManager {
      
         static readonly int[] DirectionOffsets = {8, -8,-1,1,7,-7,9,-9};
-        static readonly List<HashSet<int>> PawnStartingSquares = new List<HashSet<int>> {
+        public static readonly List<HashSet<int>> PawnStartingSquares = new List<HashSet<int>> {
             new HashSet<int> {8,9,10,11,12,13,14,15}, 
             new HashSet<int> {48,49,50,51,52,53,54,55}, 
         };
@@ -336,9 +336,10 @@ namespace Chess {
 
         public static bool IsAttackedByPawn(int square, int colour, int[] Squares) {
             int direction =  colour == 8 ? 8: -8;  
+             if (square + direction < 0 || square + direction > 63) return false; 
             int right = (square + 1)%8 == 0 ? 0 : 1;
             int left = square % 8 == 0 ? 0 : 1;
-            if (square + direction < 0 || square + direction > 63) return false; 
+           
             if (right == 1) { 
                 if (Piece.PieceType(Squares[square + direction + right]) == Piece.Pawn && !Piece.IsColour(Squares[square + direction + right], colour)) {
                     return true; 

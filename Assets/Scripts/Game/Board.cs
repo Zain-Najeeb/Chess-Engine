@@ -112,13 +112,12 @@ namespace Chess {
             return moves;
         }
 
-        public Dictionary<int, List<int>> GenerateAllMoves(HashSet<int> pieces, int[] Squares) {
+        public Dictionary<int, List<int>> GenerateAllMoves(HashSet<int> pieces, int[] Squares, int index) {
             Dictionary<int, List<int>> possible = new Dictionary<int, List<int>>(); 
-            int offset = Color == 8 ? 0:1;
-            Dictionary<int, int> pinned = GameManager.GeneratePinnedPieces(KingPositions[offset], Color, Squares); 
+            Dictionary<int, int> pinned = GameManager.GeneratePinnedPieces(KingPositions[index], Color, Squares); 
             InitilizeCheck();
             foreach (int tile in pieces) {
-                possible[tile] = OrderdPossibleMoves(tile, Squares, pinned,Squares[tile]);
+                possible[tile] = OrderdPossibleMoves(tile, Squares, pinned,Squares[tile], index^1);
                 if (possible[tile] == null) {
                     possible.Remove(tile);  
                 } 
@@ -136,35 +135,37 @@ namespace Chess {
             // Debug.Log(offset); 
         }
 
-        public List<int> OrderdPossibleMoves( int position, int[] Squares, Dictionary<int, int> pinned, int piece) {
+        public List<int> OrderdPossibleMoves( int position, int[] Squares, Dictionary<int, int> pinned, int piece, int offset) {
             List<int> unorderedMoves = PossibleMoves(Squares[position], position, pinned);
             if (unorderedMoves.Count == 0) {
                 return null;
             }
-            return unorderedMoves; 
-         
-            var moveScoreTuples = new List<(int Move, int Score)>();
-            int moveScoreGuess;
-            int movePieceType ; 
-            int capturePieceType; 
-            foreach (int square in unorderedMoves) {
-                moveScoreGuess = 0; 
-                movePieceType = Piece.PieceType(Squares[position]); 
-                capturePieceType = Piece.PieceType(Squares[square]);
-                if (capturePieceType != Piece.None) {
-                    moveScoreGuess = 10 * Computer.WorthFromType(capturePieceType) - Computer.WorthFromType(movePieceType); 
-                }
-                if (movePieceType == Piece.Pawn && GameManager.ends.Contains(square) ) {
-                    Debug.Log("test");
-                    moveScoreGuess += Computer.WorthFromType(Computer.WorthFromType(7)); 
-                }
-                if (GameManager.IsAttackedByPawn(square, Piece.Colour(Squares[position]), Squares )) {
-                    moveScoreGuess -= Computer.WorthFromType(movePieceType); 
-                }
-                
-                moveScoreTuples.Add((square, moveScoreGuess));
-            }
-            return moveScoreTuples.OrderByDescending(t => t.Score).Select(t => t.Move).ToList();
+            // return unorderedMoves; 
+
+            return unorderedMoves
+                .Select(square => {
+                    int movePieceType = Piece.PieceType(Squares[position]);
+                    int capturePieceType = Piece.PieceType(Squares[square]);
+                    int moveScoreGuess = 0;
+
+                    if (capturePieceType != Piece.None) {
+                        moveScoreGuess = 10 * Computer.WorthFromType(capturePieceType) - Computer.WorthFromType(movePieceType);
+                    }
+
+                    if (movePieceType == Piece.Pawn && GameManager.PawnStartingSquares[offset].Contains(square)) {
+                        moveScoreGuess += Computer.WorthFromType(6); 
+                    }
+
+                    if (GameManager.IsAttackedByPawn(square, Piece.Colour(Squares[position]), Squares)) {
+                        // Debug.Log(square); 
+                        moveScoreGuess -= Computer.WorthFromType(movePieceType);
+                    }
+
+                    return (Move: square, Score: moveScoreGuess);
+                })
+                .OrderByDescending(t => t.Score)
+                .Select(t => t.Move)
+                .ToList();
         }
 
 

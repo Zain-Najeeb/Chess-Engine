@@ -63,11 +63,35 @@ namespace Chess {
 
 
         int Evaluate(Board board) {
+            int offset = board.Color == 8 ? 1 : -1 ;
             int whiteEval = CountMaterial(board.pieces[0], board.Squares);
             int blackEval = CountMaterial(board.pieces[1], board.Squares);
+
+            blackEval += CountEndPanws(board.Squares, board.pieces[1],  0);
+            whiteEval += CountEndPanws(board.Squares, board.pieces[0],  1);
+            
             int eval = whiteEval - blackEval; 
-            int offset = board.Color == 8 ? 1 : -1 ;
+    
             return eval * offset; 
+        }
+
+        int CountEndPanws(int[] Squares, HashSet<int> pieces, int offset) {
+            if (pieces.Count < 8) {
+                return PawnAtEnd(Squares, pieces, GameManager.PawnStartingSquares[offset]); 
+            } else {
+                return PawnAtEnd(Squares, GameManager.PawnStartingSquares[offset], pieces); 
+            }
+        }
+
+        int PawnAtEnd(int[] Squares, HashSet<int> External, HashSet<int> Containor) {
+            int eval = 0; 
+            foreach(int square in External) {
+                if (Piece.PieceType(Squares[square]) == Piece.Pawn && Containor.Contains(square)) {
+                    // UnityEngine.Debug.Log("tefffst"); 
+                    eval += 600; 
+                }
+            }
+            return eval; 
         }
         void TotalPositions (int depth, Board board) {
             if (depth == 0) {
@@ -82,7 +106,7 @@ namespace Chess {
             bool whiteRookQueen = board.Rooks[0][0]; 
             bool whiteRookKing = board.Rooks[0][1];
             int index = board.Color == 8 ? 0 : 1; 
-            Dictionary<int, List<int>> moves = board.GenerateAllMoves(board.pieces[index], board.Squares);
+            Dictionary<int, List<int>> moves = board.GenerateAllMoves(board.pieces[index], board.Squares,  index);
               foreach (var kvp in moves) {
                 foreach (int square in kvp.Value) { 
                     if (depth == 1)  positions++;
@@ -109,7 +133,7 @@ namespace Chess {
                 return Evaluate(board); 
             }
             int index = board.Color == 8 ? 0 : 1; 
-            Dictionary<int, List<int>> moves = board.GenerateAllMoves(board.pieces[index], board.Squares);
+            Dictionary<int, List<int>> moves = board.GenerateAllMoves(board.pieces[index], board.Squares, index);
             if (moves.Count == 0) {
                 if (board.check.Count != 0) {
                     return negativeInfinity; 
@@ -117,35 +141,26 @@ namespace Chess {
                     return 0; 
                 }
             }
-
+            bool whiteKing = board.Kings[0]; 
+            bool BlackKing = board.Kings[1]; 
+            bool blackRookQueen = board.Rooks[1][0]; 
+            bool blackRookKing = board.Rooks[1][1]; 
+            bool whiteRookQueen = board.Rooks[0][0]; 
+            bool whiteRookKing = board.Rooks[0][1]; 
             foreach (var kvp in moves) {
+                int currpiece =  board.Squares[kvp.Key]; 
                 foreach (int square in kvp.Value) {
-
-
                     int atttacks = board.Squares[square]; 
-                    int currpiece =  board.Squares[kvp.Key]; 
-                    //ugly shitty code
-                    bool whiteKing = board.Kings[0]; 
-                    bool BlackKing = board.Kings[1]; 
-                    bool blackRookQueen = board.Rooks[1][0]; 
-                    bool blackRookKing = board.Rooks[1][1]; 
-                    
-                    bool whiteRookQueen = board.Rooks[0][0]; 
-                    bool whiteRookKing = board.Rooks[0][1]; 
                     board.MoviePiece(currpiece, kvp.Key, square);
                     if (depth == 1) positions++;  
                     int evaluation = -Search(depth -1, board, -beta, -alpha,  stack);
                     board.UndoMove(kvp.Key, square, currpiece, atttacks);
-                    //no lie that section is the ugliest part of the code!
                     board.Kings[0] = whiteKing;
                     board.Kings[1] = BlackKing;
                     board.Rooks[1][0] = blackRookQueen;
                     board.Rooks[1][1] = blackRookKing;
-
                     board.Rooks[0][0] = whiteRookQueen;
                     board.Rooks[0][1] = whiteRookKing;
-
-
                     if (evaluation >= beta) {
                         return beta; 
                     }
@@ -158,7 +173,6 @@ namespace Chess {
                     
                 }
             }
-            // Debug.Log(positions);
             return alpha; 
         }
 
