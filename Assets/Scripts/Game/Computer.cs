@@ -37,28 +37,28 @@ namespace Chess {
             Dictionary<(int,int), int>stack= new   Dictionary<(int,int), int>();  
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            // int eval = Search(deptToReach, board, negativeInfinity, positiveInfinity, stack); 
+            int eval = Search(deptToReach, board, negativeInfinity, positiveInfinity, stack); 
 
        
        
-               TotalPositions(deptToReach, board);
+            //    TotalPositions(deptToReach, board);
             stopwatch.Stop();
             TimeSpan elapsed = stopwatch.Elapsed;
-            // int originalPosition = -1; 
-            // int target = -1; 
-            // foreach (var kvp in stack) {           
-            //     if (kvp.Value >= min) {
-            //         // Debug.Log(kvp.Value);
-            //         (originalPosition, target) = kvp.Key;
-            //     }
+            int originalPosition = -1; 
+            int target = -1; 
+            foreach (var kvp in stack) {           
+                if (kvp.Value >= min) {
+                    // Debug.Log(kvp.Value);
+                    (originalPosition, target) = kvp.Key;
+                }
  
-            // }
+            }
             UnityEngine.Debug.Log(positions + " "  + elapsed.TotalSeconds); 
         //   UnityEngine.Debug.Log(originalPosition + "  " + target + " " + " " + stack.Count );
 
         
-        //   TileManger.MovePiece(target, TileManger.tiles[originalPosition].currPiece.GetComponent<SpriteRenderer>().sprite, board.Squares[originalPosition], originalPosition ); 
-        //   TileManger.tiles[originalPosition].DestroySprite(); 
+          TileManger.MovePiece(target, TileManger.tiles[originalPosition].currPiece.GetComponent<SpriteRenderer>().sprite, board.Squares[originalPosition], originalPosition ); 
+          TileManger.tiles[originalPosition].DestroySprite(); 
         }
 
 
@@ -73,29 +73,24 @@ namespace Chess {
             if (depth == 0) {
                 return ;
             }
+
+            bool whiteKing = board.Kings[0]; 
+            bool BlackKing = board.Kings[1]; 
+            bool blackRookQueen = board.Rooks[1][0]; 
+            bool blackRookKing = board.Rooks[1][1]; 
+            
+            bool whiteRookQueen = board.Rooks[0][0]; 
+            bool whiteRookKing = board.Rooks[0][1];
             int index = board.Color == 8 ? 0 : 1; 
             Dictionary<int, List<int>> moves = board.GenerateAllMoves(board.pieces[index], board.Squares);
               foreach (var kvp in moves) {
                 foreach (int square in kvp.Value) { 
                     if (depth == 1)  positions++;
-      
                     int atttacks = board.Squares[square]; 
                     int currpiece =  board.Squares[kvp.Key]; 
-
-
-                    bool whiteKing = board.Kings[0]; 
-                    bool BlackKing = board.Kings[1]; 
-                    bool blackRookQueen = board.Rooks[1][0]; 
-                    bool blackRookKing = board.Rooks[1][1]; 
-                    
-                    bool whiteRookQueen = board.Rooks[0][0]; 
-                    bool whiteRookKing = board.Rooks[0][1];
-
-
                     board.MoviePiece(board.Squares[kvp.Key], kvp.Key, square); 
                     TotalPositions(depth - 1, board); 
-                    
-                    
+            
                     board.Kings[0] = whiteKing;
                     board.Kings[1] = BlackKing;
                     board.Rooks[1][0] = blackRookQueen;
@@ -104,17 +99,10 @@ namespace Chess {
                     board.Rooks[0][0] = whiteRookQueen;
                     board.Rooks[0][1] = whiteRookKing;
                     board.UndoMove(kvp.Key, square, currpiece, atttacks); 
-
-                    
                 }
             }
         }
 
-        void CopyBoard ( Stack<HashSet<int>> checks, Stack<bool[][]> Rooks, Stack<bool[]> Kings, Board board) {
-            checks.Push(board.check); 
-            Rooks.Push(board.Rooks); 
-            Kings.Push(board.Kings);
-        }
     
         int Search (int depth, Board board, int alpha, int beta,  Dictionary<(int,int), int>stack) {
             if (depth == 0) {

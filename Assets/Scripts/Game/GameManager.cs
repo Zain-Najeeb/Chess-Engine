@@ -12,10 +12,10 @@ namespace Chess {
     public static class GameManager {
      
         static readonly int[] DirectionOffsets = {8, -8,-1,1,7,-7,9,-9};
-        static readonly int[][] PawnStartingSquares = new int[][]{
-            new int[] {8,9,10,11,12,13,14,15}, 
-            new int[] {48,49,50,51,52,53,54,55}, 
-        }; 
+        static readonly List<HashSet<int>> PawnStartingSquares = new List<HashSet<int>> {
+            new HashSet<int> {8,9,10,11,12,13,14,15}, 
+            new HashSet<int> {48,49,50,51,52,53,54,55}, 
+        };
         public static readonly HashSet<int>  ends = new HashSet<int>{
         0, 1, 2, 3, 4, 5, 6, 7, 56, 57, 58, 59, 60, 61, 62, 63
     };
@@ -24,8 +24,12 @@ namespace Chess {
         public static void GenerateSlidingMoves(int tile, int piece, List<int> moves, int[] Squares, int colour, Dictionary<int, int> pinned, bool forCheck, HashSet<int> check) {
             if (DoubleCheck(check)) return;
             int opponent = Piece.IsColour(piece , 8) ? 16 : 8; 
-            int direction = pinned.ContainsKey(tile) ? pinned[tile] : -1; 
-
+            int direction; 
+            if (pinned == null) {
+                direction = -1; 
+            } else {
+                direction = pinned.ContainsKey(tile) ? pinned[tile] : -1; 
+            }
             int oppisoteDirection = GetOtherDirection(direction);  
             int startDirIndex = Piece.PieceType(piece) == Piece.Bishop ? 4 : 0; 
             int endDirIndex = Piece.PieceType(piece) == Piece.Rook ? 4 : 8; 
@@ -74,7 +78,12 @@ namespace Chess {
         }
         public static void GeneratePawnMoves(int tile, int piece, List<int> moves, int[] Squares, int colour, int enPessant, Dictionary<int, int> pinned, bool KingCheck, HashSet<int> check) {
             if (DoubleCheck(check)) return; 
-            int pinnedDirection = pinned.ContainsKey(tile) ? pinned[tile] : -1; 
+            int pinnedDirection; 
+            if (pinned == null) {
+                pinnedDirection = -1; 
+            } else {
+                pinnedDirection = pinned.ContainsKey(tile) ? pinned[tile] : -1; 
+            }
             if (pinnedDirection == 2 || pinnedDirection == 3) return; 
             int opponent = Piece.IsColour(piece , 8) ? 16 : 8; 
             int direction = colour == 8 ? 8: -8;  
@@ -134,32 +143,27 @@ namespace Chess {
                     }  else {
                         IgnorePieceCheck(curr, moves, check == null); 
                     }
-                
-           
                 } 
             }
 
         }
-        public static HashSet<int> GenerateAllPossibleMoves(HashSet<int> pieces, int oppisoteColour, int [] Squares) {
+        public static List<int> GenerateAllPossibleMoves(HashSet<int> pieces, int oppisoteColour, int [] Squares) {
             List<int> attacks = new List<int>();
-            Dictionary<int, int> pinned = new Dictionary<int, int>();   
-            HashSet<int> moves = new HashSet<int>(); 
             foreach (int item in pieces) {
                 int opponentPiece = Squares[item]; 
-                if (Piece.IsSlidingPiece(opponentPiece)) {
-                GenerateSlidingMoves(item, opponentPiece,attacks,Squares,oppisoteColour, pinned ,true, null); 
+                if (Piece.IsSlidingPiece(opponentPiece)) {  
+                GenerateSlidingMoves(item, opponentPiece,attacks,Squares,oppisoteColour, null ,true, null); 
                 } else {
                     if (Piece.PieceType(opponentPiece) == 2) { // pawn
-                        GeneratePawnMoves(item, opponentPiece, attacks, Squares, oppisoteColour,  -1, pinned, true, null); 
+                        GeneratePawnMoves(item, opponentPiece, attacks, Squares, oppisoteColour,  -1, null, true, null); 
                     } else if (Piece.PieceType(opponentPiece) == Piece.Knight) {
                         GenerateKnightMoves(item, opponentPiece, attacks, Squares, oppisoteColour, null, null); 
                     } else {
                         GenerateKingMoves(item, opponentPiece, attacks, Squares, oppisoteColour, null, null, null, false, null); 
                     }
-                }
-              moves.UnionWith(attacks); 
+                } 
             }
-            return moves; 
+            return attacks; 
         }
         public static HashSet<int> CheckforCheck(int kingPosition, int colour, int[] Squares) {
             HashSet<int> moves = new HashSet<int>(); 
@@ -208,7 +212,6 @@ namespace Chess {
                     }  
                 }
             }
-            attacks.Clear();
             int height = colour == 8 ? 8 : -8; 
             int right = (kingPosition + 1)%8 == 0 ? 0 : 1;
             int left = kingPosition % 8 == 0 ? 0 : 1;
@@ -243,7 +246,7 @@ namespace Chess {
             int index = colour == 8 ? 0 : 1; 
             int oppisote = colour == 8 ? 1 : 0; 
             int oppisoteColour = colour == 8 ? 16 : 8;  
-            HashSet<int> notValid = new HashSet<int>(); 
+            List<int> notValid = new List<int>(); //dumbass using a list instead of hashset
             if (forValid) {
                 notValid = GenerateAllPossibleMoves(pieces[oppisote], oppisoteColour, Squares); 
             }

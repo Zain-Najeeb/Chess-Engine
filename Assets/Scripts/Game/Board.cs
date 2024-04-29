@@ -90,10 +90,13 @@ namespace Chess {
                 Rooks[pieceColour][position] = false; 
             }
         }
-        public List<int> PossibleMoves(int piece, int tile) {
+        public List<int> PossibleMoves(int piece, int tile, Dictionary<int, int> pinned) {
             List<int> moves =  new List<int>();
             int offset = Piece.IsColour(piece, 8) ? 0 :1;
-            Dictionary<int, int> pinned = GameManager.GeneratePinnedPieces(KingPositions[offset], Color, Squares); 
+
+            if (pinned == null) {
+                pinned = GameManager.GeneratePinnedPieces(KingPositions[offset], Color, Squares); 
+            }
             if (Piece.IsSlidingPiece(piece)) {
                 GameManager.GenerateSlidingMoves(tile, piece,moves,Squares,Color, pinned, false, check); 
             } else {
@@ -111,9 +114,11 @@ namespace Chess {
 
         public Dictionary<int, List<int>> GenerateAllMoves(HashSet<int> pieces, int[] Squares) {
             Dictionary<int, List<int>> possible = new Dictionary<int, List<int>>(); 
+            int offset = Color == 8 ? 0:1;
+            Dictionary<int, int> pinned = GameManager.GeneratePinnedPieces(KingPositions[offset], Color, Squares); 
             InitilizeCheck();
             foreach (int tile in pieces) {
-                possible[tile] = PossibleMoves(Squares[tile],tile);
+                possible[tile] = PossibleMoves(Squares[tile],tile, pinned);
                 
                 if (possible[tile].Count == 0) {
                     possible.Remove(tile);  

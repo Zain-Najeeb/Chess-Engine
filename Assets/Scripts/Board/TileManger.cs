@@ -9,7 +9,7 @@ using UnityEngine;
 public class TileManger : MonoBehaviour
 {
 
-    public const string StartPositionFEN = "r3k2r/p1ppqpb1/Bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPB1PPP/R3K2R b KQkq - 0 1";
+    public const string StartPositionFEN = "r3k2r/p1ppqpb1/Bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPB1PPP/R3K2R w KQkq - 0 1";
     [SerializeField] private  int width, height; 
     [SerializeField] private  Tile prefab;
     private static readonly Color SelectedColour  = new Color (222f /255f , 62f /255f,  77f /255f);  
@@ -27,7 +27,7 @@ public class TileManger : MonoBehaviour
                 tiles[i].AddPiece(piecePairs[board.Squares[i]], board.Squares[i]);
             } 
         }
-        engine.PlayMove(board, board.Color); 
+        // engine.PlayMove(board, board.Color); 
     }
 
     void LoadSprites() {
@@ -79,13 +79,13 @@ public class TileManger : MonoBehaviour
     }
 
     public static bool IsValidMove(int tile, int piece, int target) {
-        List<int> moves = board.PossibleMoves(piece, tile); 
+        List<int> moves = board.PossibleMoves(piece, tile,null); 
         return moves.Contains(target); 
     }
 
     public static void HighLgihtSqauares (int tile, int piece) {
         board.InitilizeCheck();
-        List<int> moves = board.PossibleMoves(piece, tile); 
+        List<int> moves = board.PossibleMoves(piece, tile,null); 
         for (int i = 0; i < moves.Count; i++) {
             tiles[moves[i]].HighlightSquare(SelectedColour); 
         }
@@ -125,12 +125,12 @@ public class TileManger : MonoBehaviour
             
 
         if (board.Color == 16) {
-        //    engine.PlayMove(board, opponent);
+           engine.PlayMove(board, opponent);
         }
 
     }
     public static void DeslectSquares (int tile, int piece) {
-        List<int> moves = board.PossibleMoves(piece, tile); 
+        List<int> moves = board.PossibleMoves(piece, tile, null); 
         for (int i = 0; i < moves.Count; i++) {
             tiles[moves[i]].HighlightSquare( tiles[moves[i]].defaultColor); 
         }
